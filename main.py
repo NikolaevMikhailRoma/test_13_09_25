@@ -1,10 +1,13 @@
+import asyncio
 from src.parser import create_knowledge_base
 from src.postprocess import postprocess_knowledge_base
+from src.telegram_bot import run_bot
 import config
 
 
-def main():
-    # Parse websites
+async def main():
+    # Parse websites and create knowledge base
+    print("Creating knowledge base...")
     create_knowledge_base(
         urls_file=config.LINK_LIST_PATH,
         output_file=config.PARSED_DATA_PATH,
@@ -16,7 +19,10 @@ def main():
         input_file=config.PARSED_DATA_PATH,
         output_file=config.PARSED_DATA_PATH
     )
+    
+    # Run Telegram bot
+    await run_bot()
 
 
 if __name__ == "__main__":
-    main()
+    asyncio.run(main())
