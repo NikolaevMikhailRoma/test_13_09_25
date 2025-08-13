@@ -65,7 +65,7 @@ ehthumbs.db
 Thumbs.db
 
 # Project specific
-simple_database/
+simple_database/*
 *.log
 CLAUDE.md
-*docs*
+docs/*
