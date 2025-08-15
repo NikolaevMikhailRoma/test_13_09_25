@@ -17,7 +17,7 @@ PARSED_DATA_PATH = os.path.join(DATABASE_DIR, "parsed_list.json")
 
 # Настройки парсинга
 # Если None - парсить все ссылки, иначе ограничить количество
-PARSING_LIMIT = 2  # Для тестирования установлено ограничение в 2 ссылки
+PARSING_LIMIT = None
 
 # Настройки веб-парсера
 REQUEST_TIMEOUT = 30  # Таймаут для HTTP запросов в секундах

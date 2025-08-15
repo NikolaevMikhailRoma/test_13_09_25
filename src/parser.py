@@ -1,7 +1,7 @@
 import json
 import os
-import time
-import requests
+import asyncio
+import aiohttp
 from bs4 import BeautifulSoup
 from typing import List, Dict, Optional
 
@@ -16,46 +16,59 @@ def load_urls(file_path: str) -> List[str]:
         return [line.strip() for line in f if line.strip()]
 
 
-def parse_page(url: str) -> Optional[str]:
+async def parse_page(session: aiohttp.ClientSession, url: str) -> Dict[str, str]:
     """Extract text content from web page."""
     try:
-        response = requests.get(url, timeout=30)
-        response.raise_for_status()
-        
-        soup = BeautifulSoup(response.text, 'html.parser')
-        
-        # Remove unwanted elements
-        for element in soup(['script', 'style', 'nav', 'header', 'footer']):
-            element.decompose()
-        
-        # Extract and clean text
-        text = soup.get_text(separator=' ', strip=True)
-        text = ' '.join(text.split())  # Remove extra whitespace
-        
-        return text if text else None
+        async with session.get(url, timeout=aiohttp.ClientTimeout(total=30)) as response:
+            response.raise_for_status()
+            html = await response.text()
+            
+            soup = BeautifulSoup(html, 'html.parser')
+            
+            # Remove unwanted elements
+            for element in soup(['script', 'style', 'nav', 'header', 'footer']):
+                element.decompose()
+            
+            # Extract and clean text
+            text = soup.get_text(separator=' ', strip=True)
+            text = ' '.join(text.split())  # Remove extra whitespace
+            
+            if text:
+                return {"url": url, "text": text}
+            else:
+                return {"url": url, "text": ""}
         
     except Exception as e:
         print(f"Error parsing {url}: {e}")
-        return None
+        return {"url": url, "text": ""}
 
 
-def create_knowledge_base(urls_file: str, output_file: str, limit: Optional[int] = None) -> bool:
+async def parse_urls_async(urls: List[str]) -> List[Dict[str, str]]:
+    """Parse URLs asynchronously."""
+    async with aiohttp.ClientSession() as session:
+        tasks = [parse_page(session, url) for url in urls]
+        results = await asyncio.gather(*tasks, return_exceptions=True)
+        
+        # Filter out exceptions and empty results
+        knowledge_base = []
+        for result in results:
+            if isinstance(result, dict) and result.get("text"):
+                knowledge_base.append(result)
+        
+        return knowledge_base
+
+
+async def create_knowledge_base_async(urls_file: str, output_file: str, limit: Optional[int] = None) -> bool:
     """Parse URLs and create knowledge base."""
     urls = load_urls(urls_file)
     
     if limit:
         urls = urls[:limit]
     
-    knowledge_base = []
+    print(f"Parsing {len(urls)} URLs asynchronously...")
     
-    for i, url in enumerate(urls):
-        print(f"Parsing {i+1}/{len(urls)}")
-        
-        text = parse_page(url)
-        if text:
-            knowledge_base.append({"url": url, "text": text})
-        
-        time.sleep(1)  # Rate limiting
+    # Run async parsing
+    knowledge_base = await parse_urls_async(urls)
     
     # Save results
     with open(output_file, 'w', encoding='utf-8') as f:
@@ -63,3 +76,12 @@ def create_knowledge_base(urls_file: str, output_file: str, limit: Optional[int]
     
     print(f"Done. Saved {len(knowledge_base)} pages")
     return len(knowledge_base) > 0
+
+
+def create_knowledge_base(urls_file: str, output_file: str, limit: Optional[int] = None) -> bool:
+    """Parse URLs and create knowledge base (sync wrapper)."""
+    try:
+        loop = asyncio.get_event_loop()
+        return loop.run_until_complete(create_knowledge_base_async(urls_file, output_file, limit))
+    except RuntimeError:
+        return asyncio.run(create_knowledge_base_async(urls_file, output_file, limit))

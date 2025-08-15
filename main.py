@@ -8,7 +8,8 @@ import config
 async def main():
     # Parse websites and create knowledge base
     print("Creating knowledge base...")
-    create_knowledge_base(
+    from src.parser import create_knowledge_base_async
+    await create_knowledge_base_async(
         urls_file=config.LINK_LIST_PATH,
         output_file=config.PARSED_DATA_PATH,
         limit=config.PARSING_LIMIT
