@@ -15,6 +15,29 @@ def load_response_instructions() -> str:
         return ""
 
 
+def load_difficulty_examples() -> str:
+    """Load difficulty examples based on current difficulty mode."""
+    examples_path = os.path.join(config.PROJECT_ROOT, "prompts", "difficulty_examples.json")
+    try:
+        with open(examples_path, 'r', encoding='utf-8') as f:
+            examples = json.load(f)
+            current_mode = getattr(config, 'DIFFICULTY_MODE', 'medium')
+            if current_mode in examples:
+                example_data = examples[current_mode]
+                return f"""
+
+RESPONSE FORMAT EXAMPLE ({current_mode.upper()}):
+{example_data['description']}
+
+Question: {example_data['example']['question']}
+Answer: {example_data['example']['answer']}
+
+Follow this format for all responses."""
+    except:
+        pass
+    return ""
+
+
 def load_knowledge_base() -> str:
     """Load knowledge base as JSON string."""
     try:
@@ -27,19 +50,21 @@ def load_knowledge_base() -> str:
 
 def get_system_prompt(mode: str) -> Optional[str]:
     """Get system prompt based on mode."""
+    difficulty_examples = load_difficulty_examples()
+    
     if mode == "WITHOUT_CONTEXT":
-        return None
+        return difficulty_examples if difficulty_examples else None
     elif mode == "CAD":
         instructions = load_response_instructions()
         knowledge_base = load_knowledge_base()
         return f"""{instructions}
 
-БАЗА ЗНАНИЙ EORA (JSON):
+EORA KNOWLEDGE BASE (JSON):
 {knowledge_base}
 
-Используйте эту информацию для ответов на вопросы пользователей."""
+Use this information to answer user questions.{difficulty_examples}"""
     elif mode == "RAG":
-        return None
+        return difficulty_examples if difficulty_examples else None
     
     return None
 

@@ -1,0 +1,23 @@
+{
+  "easy": {
+    "description": "Simple answer to the question",
+    "example": {
+      "question": "What can you do for retailers?",
+      "answer": "For example, we made an HR bot for Magnit, and also image search for KazanExpress"
+    }
+  },
+  "medium": {
+    "description": "Answer with source link references at the end",
+    "example": {
+      "question": "What can you do for retailers?",
+      "answer": "For example, we made an HR bot for Magnit, and also image search for KazanExpress\n\nSources: [1](https://eora.ru/cases/chat-boty/hr-bot-dlya-magnit-kotoriy-priglashaet-na-sobesedovanie), [2](https://eora.ru/cases/kazanexpress-poisk-tovarov-po-foto)"
+    }
+  },
+  "hard": {
+    "description": "Answer with inline citations linked to specific sources",
+    "example": {
+      "question": "What can you do for retailers?",
+      "answer": "For example, we made an HR bot for Magnit [1](https://eora.ru/cases/chat-boty/hr-bot-dlya-magnit-kotoriy-priglashaet-na-sobesedovanie), and also image search for KazanExpress [2](https://eora.ru/cases/kazanexpress-poisk-tovarov-po-foto)"
+    }
+  }
+}
