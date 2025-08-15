@@ -12,8 +12,18 @@ def load_urls(file_path: str) -> List[str]:
         print(f"File not found: {file_path}")
         return []
     
-    with open(file_path, 'r', encoding='utf-8') as f:
-        return [line.strip() for line in f if line.strip()]
+    try:
+        with open(file_path, 'r', encoding='utf-8') as f:
+            urls = [line.strip() for line in f if line.strip()]
+            # Basic URL validation
+            valid_urls = []
+            for url in urls:
+                if url.startswith(('http://', 'https://')) and len(url) < 2000:
+                    valid_urls.append(url)
+            return valid_urls
+    except Exception as e:
+        print(f"Error reading URLs file: {e}")
+        return []
 
 
 async def parse_page(session: aiohttp.ClientSession, url: str) -> Dict[str, str]:

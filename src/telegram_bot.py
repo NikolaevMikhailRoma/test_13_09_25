@@ -19,6 +19,16 @@ async def start_handler(message: types.Message):
 @dp.message()
 async def message_handler(message: types.Message):
     """Handle all text messages."""
+    # Input validation
+    if not message.text or len(message.text.strip()) == 0:
+        await message.answer("Please send a non-empty message.", parse_mode="HTML")
+        return
+    
+    # Rate limiting - basic protection
+    if len(message.text) > 4000:
+        await message.answer("Message too long. Please limit to 4000 characters.", parse_mode="HTML")
+        return
+    
     user_message = message.text
     
     # Send typing action
@@ -30,7 +40,11 @@ async def message_handler(message: types.Message):
     if response:
         # Format response for Telegram
         formatted_response = format_text_for_telegram(response)
-        await message.answer(formatted_response, parse_mode="HTML")
+        try:
+            await message.answer(formatted_response, parse_mode="HTML")
+        except Exception as e:
+            # Fallback to plain text if HTML parsing fails
+            await message.answer(response)
     else:
         await message.answer("Sorry, an error occurred while processing the request.", parse_mode="HTML")
 

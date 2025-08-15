@@ -74,6 +74,17 @@ def send_message_to_llm(message: str, mode: str = None) -> Optional[str]:
     if mode is None:
         mode = config.LLM_MODE
     
+    # Input validation
+    if not message or not isinstance(message, str):
+        return None
+    
+    # Sanitize message - limit length and remove control characters
+    message = message.strip()[:4000]  # Limit message length
+    message = ''.join(char for char in message if ord(char) >= 32 or char in '\n\r\t')
+    
+    if not message:
+        return None
+    
     messages = []
     
     # Add system prompt if exists
@@ -83,6 +94,11 @@ def send_message_to_llm(message: str, mode: str = None) -> Optional[str]:
     
     # Add user message
     messages.append({"role": "user", "content": message})
+    
+    # Check API key exists
+    if not config.OPENROUTER_API_KEY:
+        print("Error: OPENROUTER_API_KEY not configured")
+        return None
     
     try:
         response = requests.post(
@@ -96,16 +112,26 @@ def send_message_to_llm(message: str, mode: str = None) -> Optional[str]:
                 "messages": messages,
                 "max_tokens": config.MAX_TOKENS,
                 "temperature": config.TEMPERATURE
-            }
+            },
+            timeout=30  # Add timeout
         )
         
         if response.status_code == 200:
             data = response.json()
-            return data["choices"][0]["message"]["content"]
+            # Validate response structure
+            if "choices" in data and len(data["choices"]) > 0:
+                if "message" in data["choices"][0] and "content" in data["choices"][0]["message"]:
+                    return data["choices"][0]["message"]["content"]
+            print("Invalid API response structure")
+            return None
         else:
-            print(f"LLM API error: {response.status_code} - {response.text}")
+            # Don't log full response text to avoid leaking sensitive data
+            print(f"LLM API error: {response.status_code}")
             return None
             
+    except requests.exceptions.RequestException as e:
+        print(f"Network error: {type(e).__name__}")
+        return None
     except Exception as e:
-        print(f"LLM error: {e}")
+        print(f"LLM error: {type(e).__name__}")
         return None

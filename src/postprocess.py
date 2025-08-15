@@ -55,16 +55,37 @@ def remove_duplicate_endings(knowledge_base: List[Dict[str, str]]) -> None:
 
 def format_text_for_telegram(text: str) -> str:
     """Format text for Telegram using HTML parse mode."""
-    # Convert markdown headers to bold
+    if not text or not isinstance(text, str):
+        return ""
+    
+    # Escape HTML characters to prevent injection
+    text = text.replace('&', '&amp;').replace('<', '&lt;').replace('>', '&gt;')
+    
+    # Convert markdown headers to bold (after escaping)
     text = re.sub(r'\*\*(.*?)\*\*', r'<b>\1</b>', text)
     text = re.sub(r'\*(.*?)\*', r'<b>\1</b>', text)
     
-    # Convert markdown links [text](url) to HTML links
-    text = re.sub(r'\[([^\]]+)\]\(([^)]+)\)', r'<a href="\2">\1</a>', text)
+    # Convert markdown links [text](url) to HTML links - validate URLs
+    def replace_link(match):
+        link_text = match.group(1)
+        url = match.group(2)
+        # Basic URL validation - only allow http/https
+        if url.startswith(('http://', 'https://')):
+            return f'<a href="{url}">{link_text}</a>'
+        return f'{link_text} ({url})'
+    
+    text = re.sub(r'\[([^\]]+)\]\(([^)]+)\)', replace_link, text)
     
     # Convert numbered references like [1] to clickable links if followed by URL
-    # Pattern: [1](url) -> <a href="url">[1]</a>
-    text = re.sub(r'\[(\d+)\]\(([^)]+)\)', r'<a href="\2">[\1]</a>', text)
+    def replace_numbered_link(match):
+        number = match.group(1)
+        url = match.group(2)
+        # Basic URL validation - only allow http/https
+        if url.startswith(('http://', 'https://')):
+            return f'<a href="{url}">[{number}]</a>'
+        return f'[{number}] ({url})'
+    
+    text = re.sub(r'\[(\d+)\]\(([^)]+)\)', replace_numbered_link, text)
     
     return text
 
