@@ -47,7 +47,7 @@ def send_message_to_llm(message: str, mode: str = None) -> Optional[str]:
             data = response.json()
             return data["choices"][0]["message"]["content"]
         else:
-            print(f"LLM API error: {response.status_code}")
+            print(f"LLM API error: {response.status_code} - {response.text}")
             return None
             
     except Exception as e:

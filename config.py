@@ -24,7 +24,7 @@ REQUEST_TIMEOUT = 30  # Таймаут для HTTP запросов в секу�
 REQUEST_DELAY = 1     # Задержка между запросами в секундах
 
 # LLM настройки
-LLM_MODEL = "deepseek/deepseek-v3"
+LLM_MODEL = "deepseek/deepseek-r1-0528:free"
 LLM_MODE = "WITHOUT_CONTEXT"
 OPENROUTER_API_KEY = os.getenv("OPENROUTER_API_KEY")
 MAX_TOKENS = 1000
