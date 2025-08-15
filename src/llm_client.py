@@ -1,16 +1,47 @@
 import requests
+import json
+import os
 from typing import Optional, List, Dict
 import config
 
 
+def load_response_instructions() -> str:
+    """Load response format instructions."""
+    instructions_path = os.path.join(config.PROJECT_ROOT, "prompts", "response_instructions.txt")
+    try:
+        with open(instructions_path, 'r', encoding='utf-8') as f:
+            return f.read()
+    except:
+        return ""
+
+
+def load_knowledge_base() -> str:
+    """Load knowledge base as JSON string."""
+    try:
+        with open(config.PARSED_DATA_PATH, 'r', encoding='utf-8') as f:
+            knowledge_base = json.load(f)
+            return json.dumps(knowledge_base, ensure_ascii=False, indent=2)
+    except:
+        return "[]"
+
+
 def get_system_prompt(mode: str) -> Optional[str]:
     """Get system prompt based on mode."""
-    prompts = {
-        "WITHOUT_CONTEXT": None,
-        "CAD": "You are a helpful CAD assistant.",
-        "RAG": "You are an AI assistant that answers questions based on provided context about EORA company projects."
-    }
-    return prompts.get(mode)
+    if mode == "WITHOUT_CONTEXT":
+        return None
+    elif mode == "CAD":
+        instructions = load_response_instructions()
+        knowledge_base = load_knowledge_base()
+        return f"""{instructions}
+
+БАЗА ЗНАНИЙ EORA (JSON):
+{knowledge_base}
+
+Используйте эту информацию для ответов на вопросы пользователей."""
+    elif mode == "RAG":
+        return None
+    
+    return None
 
 
 def send_message_to_llm(message: str, mode: str = None) -> Optional[str]:
