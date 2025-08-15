@@ -25,6 +25,7 @@ REQUEST_DELAY = 1     # Delay between requests in seconds
 
 # LLM settings
 LLM_MODEL = "deepseek/deepseek-r1-0528:free"
+# Context mode: WITHOUT CONTEXT, CAD, RAG (none active)
 LLM_MODE = "CAD"
 OPENROUTER_API_KEY = os.getenv("OPENROUTER_API_KEY")
 MAX_TOKENS = 1000

@@ -2,6 +2,7 @@ import asyncio
 from aiogram import Bot, Dispatcher, types
 from aiogram.filters import CommandStart
 from src.llm_client import send_message_to_llm
+from src.postprocess import format_text_for_telegram
 import config
 
 
@@ -12,7 +13,7 @@ dp = Dispatcher()
 @dp.message(CommandStart())
 async def start_handler(message: types.Message):
     """Handle /start command."""
-    await message.answer("Привет! Я бот EORA. Задавайте вопросы!")
+    await message.answer("Hello! I'm EORA bot. Ask me questions!", parse_mode="HTML")
 
 
 @dp.message()
@@ -27,9 +28,11 @@ async def message_handler(message: types.Message):
     response = send_message_to_llm(user_message)
     
     if response:
-        await message.answer(response)
+        # Format response for Telegram
+        formatted_response = format_text_for_telegram(response)
+        await message.answer(formatted_response, parse_mode="HTML")
     else:
-        await message.answer("Извините, произошла ошибка при обработке запроса.")
+        await message.answer("Sorry, an error occurred while processing the request.", parse_mode="HTML")
 
 
 async def run_bot():

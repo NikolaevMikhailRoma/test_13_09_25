@@ -53,6 +53,22 @@ def remove_duplicate_endings(knowledge_base: List[Dict[str, str]]) -> None:
                 entry['text'] = entry['text'][:-len(common_ending)].strip()
 
 
+def format_text_for_telegram(text: str) -> str:
+    """Format text for Telegram using HTML parse mode."""
+    # Convert markdown headers to bold
+    text = re.sub(r'\*\*(.*?)\*\*', r'<b>\1</b>', text)
+    text = re.sub(r'\*(.*?)\*', r'<b>\1</b>', text)
+    
+    # Convert markdown links [text](url) to HTML links
+    text = re.sub(r'\[([^\]]+)\]\(([^)]+)\)', r'<a href="\2">\1</a>', text)
+    
+    # Convert numbered references like [1] to clickable links if followed by URL
+    # Pattern: [1](url) -> <a href="url">[1]</a>
+    text = re.sub(r'\[(\d+)\]\(([^)]+)\)', r'<a href="\2">[\1]</a>', text)
+    
+    return text
+
+
 def postprocess_knowledge_base(input_file: str, output_file: str) -> bool:
     """Clean knowledge base from garbage and duplicates."""
     try:
